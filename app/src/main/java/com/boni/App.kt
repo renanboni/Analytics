@@ -16,11 +16,10 @@ class App: Application() {
             .builder()
             .build()
             .inject(this)
-
-        setFirebaseTracker()
     }
 
-    private fun setFirebaseTracker() {
+    override fun onCreate() {
+        super.onCreate()
         FirebaseTracker(applicationContext, analytics)
     }
 }

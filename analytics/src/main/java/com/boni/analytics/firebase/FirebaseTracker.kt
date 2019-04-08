@@ -8,7 +8,9 @@ import com.boni.analytics.Event
 import com.boni.analytics.Tracker
 import com.boni.analytics.UserProperty
 import com.google.firebase.analytics.FirebaseAnalytics
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class FirebaseTracker @Inject constructor(
@@ -37,6 +39,8 @@ class FirebaseTracker @Inject constructor(
     private fun subscribeToEvents() {
         compositeDisposable.add(
             analytics.eventStream
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
                 .map(this::mapTo)
                 .subscribe({
                     sendEvent(it)
