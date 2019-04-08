@@ -6,6 +6,7 @@ import android.util.Log
 import com.boni.analytics.Analytics
 import com.boni.analytics.Event
 import com.boni.analytics.Tracker
+import com.boni.analytics.UserProperty
 import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
@@ -19,6 +20,18 @@ class FirebaseTracker @Inject constructor(
 
     init {
         subscribeToEvents()
+        subscribeToUserProperty()
+    }
+
+    private fun subscribeToUserProperty() {
+        compositeDisposable.add(
+            analytics.userPropertyStream
+                .subscribe({
+                    sendUserProperty(it)
+                }, {
+                    logError(it.localizedMessage)
+                })
+        )
     }
 
     private fun subscribeToEvents() {
@@ -31,6 +44,10 @@ class FirebaseTracker @Inject constructor(
                     logError(it.localizedMessage)
                 })
         )
+    }
+
+    fun stopTracking() {
+        compositeDisposable.clear()
     }
 
     override fun mapTo(e: Event): FirebaseEvent {
@@ -55,5 +72,9 @@ class FirebaseTracker @Inject constructor(
 
     private fun sendEvent(e: FirebaseEvent) {
         FirebaseAnalytics.getInstance(context).logEvent(e.name, e.params)
+    }
+
+    private fun sendUserProperty(u: UserProperty) {
+        FirebaseAnalytics.getInstance(context).setUserProperty(u.key, u.key)
     }
 }
