@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import com.boni.analytics.Analytics
 import com.boni.analytics.Event
+import com.boni.analytics.Tracker
 import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
@@ -12,7 +13,7 @@ import javax.inject.Inject
 class FirebaseTracker @Inject constructor(
     private val context: Context,
     private val analytics: Analytics
-) {
+) : Tracker<Event, FirebaseEvent> {
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -23,7 +24,7 @@ class FirebaseTracker @Inject constructor(
     private fun subscribeToEvents() {
         compositeDisposable.add(
             analytics.eventStream
-                .map(this::mapToFirebaseEvent)
+                .map(this::mapTo)
                 .subscribe({
                     sendEvent(it)
                 }, {
@@ -32,13 +33,14 @@ class FirebaseTracker @Inject constructor(
         )
     }
 
-    private fun mapToFirebaseEvent(e: Event): FirebaseEvent {
+    override fun mapTo(e: Event): FirebaseEvent {
         val firebaseEvent = FirebaseEvent(e.name)
 
         e.params?.let {
             val bundle = Bundle()
 
             for (param in it) {
+                // you most likely would handle cast errors here
                 bundle.putString(param.key, param.value as String)
             }
         }
@@ -48,7 +50,7 @@ class FirebaseTracker @Inject constructor(
 
     private fun logError(err: String) {
         // do something here, crashlytics or whatever
-        Log.i("FirebaseTracker::Error", err)
+        Log.i("FirebaseTracker::error", err)
     }
 
     private fun sendEvent(e: FirebaseEvent) {
