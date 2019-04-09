@@ -3,10 +3,7 @@ package com.boni.analytics.firebase
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import com.boni.analytics.Analytics
-import com.boni.analytics.Event
-import com.boni.analytics.Tracker
-import com.boni.analytics.UserProperty
+import com.boni.analytics.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -15,19 +12,22 @@ import javax.inject.Inject
 
 class FirebaseTracker @Inject constructor(
     private val context: Context,
-    private val analytics: Analytics
-) : Tracker<Event, FirebaseEvent> {
+    private val eventsStreamProvider: EventsStreamProvider,
+    private val userPropertiesStreamProvider: UserPropertiesStreamProvider,
+    private val mapper: FirebaseMapper
+) {
 
     private val compositeDisposable = CompositeDisposable()
 
-    init {
+    fun listen() {
         subscribeToEvents()
         subscribeToUserProperty()
     }
 
     private fun subscribeToUserProperty() {
         compositeDisposable.add(
-            analytics.userPropertyStream
+            userPropertiesStreamProvider
+                .userPropertyStream
                 .subscribe({
                     sendUserProperty(it)
                 }, {
@@ -38,10 +38,10 @@ class FirebaseTracker @Inject constructor(
 
     private fun subscribeToEvents() {
         compositeDisposable.add(
-            analytics.eventStream
-                .observeOn(AndroidSchedulers.mainThread())
+            eventsStreamProvider.eventStream
                 .subscribeOn(Schedulers.io())
-                .map(this::mapTo)
+                .observeOn(AndroidSchedulers.mainThread())
+                .map { mapper.mapFrom(it) }
                 .subscribe({
                     sendEvent(it)
                 }, {
@@ -52,21 +52,6 @@ class FirebaseTracker @Inject constructor(
 
     fun stopTracking() {
         compositeDisposable.clear()
-    }
-
-    override fun mapTo(e: Event): FirebaseEvent {
-        val firebaseEvent = FirebaseEvent(e.name)
-
-        e.params?.let {
-            val bundle = Bundle()
-
-            for (param in it) {
-                // you most likely would handle cast errors here
-                bundle.putString(param.key, param.value as String)
-            }
-        }
-
-        return firebaseEvent
     }
 
     private fun logError(err: String) {

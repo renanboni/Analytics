@@ -2,10 +2,10 @@ package com.boni.analytics
 
 import io.reactivex.subjects.PublishSubject
 
-class Analytics {
+class Analytics: EventsStreamProvider, UserPropertiesStreamProvider {
 
-    val eventStream = PublishSubject.create<Event>()
-    val userPropertyStream = PublishSubject.create<UserProperty>()
+    override val eventStream = PublishSubject.create<Event>()
+    override val userPropertyStream = PublishSubject.create<UserProperty>()
 
     fun trackEvent(e: Event) {
         eventStream.onNext(e)
