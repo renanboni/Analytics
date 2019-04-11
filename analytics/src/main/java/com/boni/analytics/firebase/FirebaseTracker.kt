@@ -19,7 +19,7 @@ class FirebaseTracker @Inject constructor(
 
     private val compositeDisposable = CompositeDisposable()
 
-    fun listen() {
+    init {
         subscribeToEvents()
         subscribeToUserProperty()
     }
@@ -48,10 +48,6 @@ class FirebaseTracker @Inject constructor(
                     logError(it.localizedMessage)
                 })
         )
-    }
-
-    fun stopTracking() {
-        compositeDisposable.clear()
     }
 
     private fun logError(err: String) {

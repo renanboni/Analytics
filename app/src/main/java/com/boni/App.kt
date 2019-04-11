@@ -30,6 +30,6 @@ class App: Application() {
             analytics,
             analytics,
             firebaseMapper
-        ).listen()
+        )
     }
 }
