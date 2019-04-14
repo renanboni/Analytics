@@ -6,10 +6,10 @@ import com.boni.analytics.Mapper
 
 class FirebaseMapper: Mapper<Event, FirebaseEvent> {
 
-    override fun mapFrom(e: Event): FirebaseEvent {
-        val firebaseEvent = FirebaseEvent(e.name)
+    override fun mapFrom(event: Event): FirebaseEvent {
+        val firebaseEvent = FirebaseEvent(event.name)
 
-        e.params?.let {
+        event.params?.let {
             val bundle = Bundle()
 
             for (param in it) {
